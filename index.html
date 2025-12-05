@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="orange">
+<link rel="icon" href="icon-192.png">
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deshaj Store - Organic Products</title>
+
+<style>
+
+/* ========== Global Styles ========== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #f7f7f7;
+  color: #333;
+}
+
+/* Header */
+.header {
+  background: orange;
+  padding: 15px;
+  color: white;
+  text-align: center;
+  font-size: 22px;
+  font-weight: bold;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header span {
+  float: right; 
+  cursor: pointer; 
+  font-size: 22px; 
+  margin-right: 10px;
+}
+
+/* Cards Grid */
+.product-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 15px;
+  padding: 15px;
+}
+
+/* Product Card */
+.card {
+  background: #fff;
+  padding: 12px;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 0 10px #ccc;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.card:hover {
+  box-shadow: 0 0 15px #bbb;
+}
+
+/* Product Image */
+.card img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+/* Product Name */
+.card h4 {
+  margin-top: 10px;
+  font-size: 16px;
+  color: #333;
+}
+
+/* Price */
+.card .price {
+  font-size: 17px;
+  font-weight: bold;
+  color: green;
+  margin: 5px 0;
+}
+
+/* Add to Cart Button */
+.card button {
+  background: orange;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 10px;
+}
+.card button:hover {
+  opacity: 0.8;
+}
+
+/* Banner */
+.banner {
+  width: 100%;
+  height: 180px;
+  background-image: url('banner.jpg'); /* change banner */
+  background-size: cover;
+  background-position: center;
+  margin-bottom: 10px;
+}
+
+/* View All Button */
+.view-btn {
+  display: block;
+  margin: 10px auto 20px auto;
+  background: orange;
+  color: white;
+  padding: 10px 18px;
+  border-radius: 6px;
+  text-align: center;
+  text-decoration: none;
+  width: 150px;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .product-row {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  }
+  .card img {
+    height: 130px;
+  }
+}
+
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  Deshaj Store
+  <span onclick="goToCart()">🛒</span>
+</div>
+
+<!-- Banner -->
+<div class="banner"></div>
+
+<h2 style="padding-left:15px; margin-top:10px;">Latest Organic Products</h2>
+
+<!-- Product Grid -->
+<div class="product-row" id="latestProducts">
+  Loading products...
+</div>
+
+<a class="view-btn" href="shop.html">View All</a>
+
+<script type="module">
+
+/* Firebase Config */
+const firebaseConfig = {
+  apiKey: "AIzaSyA6izuR2_oyHbAVhkIVkH0OHj6yAOduD_8",
+  authDomain: "apna-kitchen-acdcc.firebaseapp.com",
+  projectId: "apna-kitchen-acdcc",
+  storageBucket: "apna-kitchen-acdcc.appspot.com",
+  messagingSenderId: "129562055761",
+  appId: "1:129562055761:web:baa01f9fea6f8eed025470"
+};
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getFirestore, collection, getDocs, orderBy, query, limit } 
+from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+/* Load Products */
+async function loadLatest() {
+  const box = document.getElementById("latestProducts");
+
+  const q = query(
+    collection(db, "products"),
+    orderBy("createdAt", "desc"),
+    limit(10)
+  );
+
+  const snap = await getDocs(q);
+
+  box.innerHTML = "";
+
+  snap.forEach(doc => {
+    const p = doc.data();
+    const id = doc.id;
+
+    box.innerHTML += `
+      <div class="card" onclick="openDetails('${id}')">
+        <img src="${p.image}" alt="Product Image">
+        <h4>${p.name}</h4>
+        <p class="price">₹${p.price}</p>
+        <button onclick="addToCartHandler(event, '${id}', '${p.name}', '${p.price}', '${p.image}')">
+          Add to Cart
+        </button>
+      </div>
+    `;
+  });
+}
+
+loadLatest();
+
+/* Open Product Details */
+window.openDetails = function(id) {
+  window.location.href = "product-details.html?id=" + id;
+};
+
+/* Add to Cart */
+window.addToCartHandler = function(e, id, name, price, image) {
+  e.stopPropagation();
+  let cart = JSON.parse(localStorage.getItem("cart")) || [];
+  let existing = cart.find(item => item.id === id);
+
+  if (existing) {
+    existing.qty += 1;
+  } else {
+    cart.push({ id, name, price: Number(price), image, qty: 1 });
+  }
+
+  localStorage.setItem("cart", JSON.stringify(cart));
+  alert("Added to Cart!");
+};
+
+/* Go to Cart */
+window.goToCart = function() {
+  window.location.href = "cart.html";
+};
+
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js')
+      .then(reg => console.log('Service Worker registered', reg))
+      .catch(err => console.log('Service Worker failed', err));
+  }
+</script>
+<script>
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const installBtn = document.createElement('button');
+  installBtn.innerText = "Install App";
+  installBtn.style.position = "fixed";
+  installBtn.style.bottom = "20px";
+  installBtn.style.right = "20px";
+  installBtn.style.padding = "10px 15px";
+  installBtn.style.background = "orange";
+  installBtn.style.color = "white";
+  installBtn.style.border = "none";
+  installBtn.style.borderRadius = "6px";
+  installBtn.style.cursor = "pointer";
+  document.body.appendChild(installBtn);
+
+  installBtn.addEventListener('click', async () => {
+    installBtn.style.display = 'none';
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log("User choice: ", outcome);
+    deferredPrompt = null;
+  });
+});
+</script>
+
+
+</body>
+</html>

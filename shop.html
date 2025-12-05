@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shop - Deshaj Store</title>
+<style>
+  body { font-family: Arial; background:#f7f7f7; margin:0; padding:0; }
+  .header { background: orange; color:white; padding:15px; text-align:center; font-size:22px; font-weight:bold; position:sticky; top:0; z-index:100; }
+  .header span { float:right; cursor:pointer; font-size:22px; }
+  h2 { padding:15px 15px 0 15px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:15px; padding:15px; }
+  .card { background:white; border-radius:10px; padding:10px; text-align:center; box-shadow:0 0 10px #ccc; transition:0.3s; cursor:pointer; }
+  .card:hover { box-shadow:0 0 15px #bbb; }
+  .card img { width:100%; height:150px; object-fit:cover; border-radius:10px; }
+  .card h3 { margin:10px 0 5px 0; font-size:16px; color:#333; }
+  .price { font-weight:bold; color:green; margin-bottom:8px; }
+  .card button { background: orange; color:white; border:none; padding:8px 12px; border-radius:6px; width:100%; cursor:pointer; }
+  .card button:hover { opacity:0.85; }
+  @media (max-width:768px) { .grid { grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); } .card img { height:130px; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  Deshaj Store
+  <span onclick="goToCart()">🛒</span>
+</div>
+
+<h2>Organic Products</h2>
+<div class="grid" id="productList">Loading products...</div>
+
+<script type="module">
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA6izuR2_oyHbAVhkIVkH0OHj6yAOduD_8",
+  authDomain: "apna-kitchen-acdcc.firebaseapp.com",
+  projectId: "apna-kitchen-acdcc",
+  storageBucket: "apna-kitchen-acdcc.appspot.com",
+  messagingSenderId: "129562055761",
+  appId: "1:129562055761:web:baa01f9fea6f8eed025470"
+};
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+async function loadProducts() {
+  const list = document.getElementById("productList");
+  const snap = await getDocs(collection(db, "products"));
+  list.innerHTML = "";
+  
+  snap.forEach(doc => {
+    const p = doc.data();
+    const id = doc.id;
+    list.innerHTML += `
+      <div class="card">
+        <img src="${p.image}" alt="${p.name}" onclick="openDetails('${id}')">
+        <h3>${p.name}</h3>
+        <p class="price">₹${p.price}</p>
+        <button onclick="addToCartHandler(event,'${id}','${p.name}','${p.price}','${p.image}')">Add to Cart</button>
+      </div>
+    `;
+  });
+}
+
+loadProducts();
+
+/* Open Product Details */
+window.openDetails = function(id){
+  window.location.href="product-details.html?id="+id;
+};
+
+/* Add to Cart with stopPropagation to prevent card click */
+window.addToCartHandler = function(e, id, name, price, image){
+  e.stopPropagation();
+  let cart = JSON.parse(localStorage.getItem("cart")) || [];
+  let existing = cart.find(item => item.id===id);
+  if(existing){ existing.qty +=1; } else { cart.push({id,name,price:Number(price),image,qty:1}); }
+  localStorage.setItem("cart", JSON.stringify(cart));
+  alert("✅ Added to Cart!");
+};
+
+window.goToCart = function(){
+  window.location.href="cart.html";
+};
+
+</script>
+
+</body>
+</html>

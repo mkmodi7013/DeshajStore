@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>All Products - Deshaj Store</title>
+
+<style>
+  body {
+    font-family: Arial;
+    background: #f7f7f7;
+    padding: 20px;
+  }
+
+  h2 {
+    text-align: center;
+    color: orange;
+    font-size: 26px;
+  }
+
+  .products-box {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+    margin-top: 25px;
+  }
+
+  .card {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px #ddd;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+
+  .card:hover {
+    transform: scale(1.03);
+  }
+
+  .card img {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+
+  .p-name {
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 10px;
+  }
+
+  .p-price {
+    color: green;
+    font-size: 16px;
+  }
+
+  .p-cat {
+    font-size: 14px;
+    color: #888;
+  }
+</style>
+
+</head>
+<body>
+
+<h2>All Products</h2>
+
+<div id="productList" class="products-box"></div>
+
+<script type="module">
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyA6izuR2_oyHbAVhkIVkH0OHj6yAOduD_8",
+    authDomain: "apna-kitchen-acdcc.firebaseapp.com",
+    projectId: "apna-kitchen-acdcc",
+    storageBucket: "apna-kitchen-acdcc.appspot.com",
+    messagingSenderId: "129562055761",
+    appId: "1:129562055761:web:baa01f9fea6f8eed025470"
+  };
+
+  import { initializeApp } 
+  from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+
+  import { getFirestore, collection, getDocs }
+  from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  async function loadProducts() {
+    const container = document.getElementById("productList");
+    container.innerHTML = "Loading...";
+
+    const querySnapshot = await getDocs(collection(db, "products"));
+
+    container.innerHTML = "";
+
+    querySnapshot.forEach((doc) => {
+      const p = doc.data();
+      const id = doc.id;
+
+      container.innerHTML += `
+        <div class="card" onclick="openEdit('${id}')">
+          <img src="${p.image}">
+          <div class="p-name">${p.name}</div>
+          <div class="p-price">₹${p.price}</div>
+          <div class="p-cat">${p.category}</div>
+        </div>
+      `;
+    });
+  }
+
+  window.openEdit = function(id) {
+    window.location.href = "edit-product.html?id=" + id;
+  };
+
+  loadProducts();
+
+</script>
+
+</body>
+</html>

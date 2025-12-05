@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Orders - Deshaj Store</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  h2 { color: orange; text-align: center; margin-bottom: 20px; }
+  .order-box { background: #fff; padding: 15px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 0 8px #ccc; }
+  .order-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+  .items { margin-top: 10px; }
+  .item { display: flex; justify-content: space-between; border-bottom: 1px solid #ddd; padding: 5px 0; }
+  select { padding: 5px; border-radius: 6px; }
+</style>
+</head>
+<body>
+
+<h2>Admin — Orders Management</h2>
+
+<div id="ordersList">Loading orders...</div>
+
+<script type="module">
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA6izuR2_oyHbAVhkIVkH0OHj6yAOduD_8",
+  authDomain: "apna-kitchen-acdcc.firebaseapp.com",
+  projectId: "apna-kitchen-acdcc",
+  storageBucket: "apna-kitchen-acdcc.appspot.com",
+  messagingSenderId: "129562055761",
+  appId: "1:129562055761:web:baa01f9fea6f8eed025470"
+};
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getFirestore, collection, getDocs, doc, updateDoc, orderBy, query } 
+from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+async function loadOrders() {
+  const list = document.getElementById("ordersList");
+  list.innerHTML = "";
+
+  const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
+  const snap = await getDocs(q);
+
+  if(snap.empty) {
+    list.innerHTML = "<p style='text-align:center;'>No orders yet</p>";
+    return;
+  }
+
+  snap.forEach(docSnap => {
+    const order = docSnap.data();
+    const id = docSnap.id;
+
+    let itemsHTML = "";
+    order.items.forEach(i => {
+      itemsHTML += `<div class="item">${i.name} (x${i.qty}) <span>₹${i.price*i.qty}</span></div>`;
+    });
+
+    list.innerHTML += `
+      <div class="order-box">
+        <div class="order-header">
+          <p><strong>${order.customerName}</strong> | ${order.phone}</p>
+          <p>Total: ₹${order.totalAmount}</p>
+          <select onchange="updateStatus('${id}', this.value)">
+            <option value="Pending" ${order.status==='Pending'?'selected':''}>Pending</option>
+            <option value="Processed" ${order.status==='Processed'?'selected':''}>Processed</option>
+            <option value="Delivered" ${order.status==='Delivered'?'selected':''}>Delivered</option>
+          </select>
+        </div>
+        <p><strong>Address:</strong> ${order.address}</p>
+        <div class="items">${itemsHTML}</div>
+      </div>
+    `;
+  });
+}
+
+async function updateStatus(orderId, status) {
+  try {
+    await updateDoc(doc(db, "orders", orderId), { status: status });
+    alert("Order status updated!");
+  } catch (err) {
+    console.error(err);
+    alert("Failed to update status");
+  }
+}
+
+window.updateStatus = updateStatus;
+loadOrders();
+
+</script>
+
+</body>
+</html>

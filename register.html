@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>User Registration - Deshaj Store</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h2>User Registration</h2>
+
+<div class="form-box">
+  <input type="text" id="name" placeholder="Full Name">
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Password">
+  <button onclick="registerUser()">Register</button>
+  <p id="msg"></p>
+  <p>Already have an account? <a href="login.html">Login</a></p>
+</div>
+
+<script type="module">
+  const firebaseConfig = {
+    apiKey: "AIzaSyA6izuR2_oyHbAVhkIVkH0OHj6yAOduD_8",
+    authDomain: "apna-kitchen-acdcc.firebaseapp.com",
+    projectId: "apna-kitchen-acdcc",
+    storageBucket: "apna-kitchen-acdcc.appspot.com",
+    messagingSenderId: "129562055761",
+    appId: "1:129562055761:web:baa01f9fea6f8eed025470"
+  };
+
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword, updateProfile } 
+    from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  async function registerUser() {
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const msg = document.getElementById("msg");
+
+    if(!name || !email || !password) {
+      msg.style.color = "red";
+      msg.innerText = "All fields are required";
+      return;
+    }
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(userCredential.user, { displayName: name });
+
+      msg.style.color = "green";
+      msg.innerText = "Registration successful! Redirecting...";
+
+      setTimeout(() => {
+        window.location.href = "shop.html";
+      }, 1500);
+
+    } catch (error) {
+      msg.style.color = "red";
+      msg.innerText = error.message;
+    }
+  }
+
+  window.registerUser = registerUser;
+</script>
+
+</body>
+</html>
