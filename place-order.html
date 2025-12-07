@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Place Order - Deshaj Store</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #f7f7f7;
+      padding: 20px;
+    }
+
+    .box {
+      max-width: 600px;
+      margin: auto;
+      padding: 20px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #ccc;
+    }
+
+    h3 { margin-top: 20px; }
+
+    .item {
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .btn {
+      width: 100%;
+      background: #ff6600;
+      color: white;
+      padding: 12px;
+      border: none;
+      font-size: 18px;
+      margin-top: 20px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="box">
+    <h2>Place Order</h2>
+
+    <h3>User Details</h3>
+    <div id="userBox">Loading...</div>
+
+    <h3>Cart Items</h3>
+    <div id="cartBox"></div>
+
+    <h3>Total Amount</h3>
+    <div id="totalBox" style="font-size:20px; font-weight:bold;">₹0</div>
+
+    <button class="btn" id="placeBtn">Place Order</button>
+  </div>
+
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getFirestore, doc, getDoc, collection, addDoc, serverTimestamp } 
+      from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6izuR2_oyHbAVhkIVkH0OHj6yAOduD_8",
+      authDomain: "apna-kitchen-acdcc.firebaseapp.com",
+      projectId: "apna-kitchen-acdcc",
+      storageBucket: "apna-kitchen-acdcc.appspot.com",
+      messagingSenderId: "129562055761",
+      appId: "1:129562055761:web:baa01f9fea6f8eed025470"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const userBox = document.getElementById("userBox");
+    const cartBox = document.getElementById("cartBox");
+    const totalBox = document.getElementById("totalBox");
+
+    let mobile = localStorage.getItem("user_mobile");
+
+    // 1️⃣ Load User Details
+    async function loadUser() {
+      const userRef = doc(db, "users", mobile);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        const u = userSnap.data();
+        userBox.innerHTML = `
+          <p><b>Name:</b> ${u.name}</p>
+          <p><b>Mobile:</b> ${u.mobile}</p>
+          <p><b>Address:</b> ${u.address}</p>
+          <p><b>Pincode:</b> ${u.pincode}</p>
+        `;
+      } else {
+        userBox.innerHTML = "<p style='color:red'>User record missing!</p>";
+      }
+    }
+
+    // 2️⃣ Load Cart
+    function loadCart() {
+      let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+      if (cart.length === 0) {
+        cartBox.innerHTML = "<p>No items in cart</p>";
+        return;
+      }
+
+      let html = "";
+      let total = 0;
+
+      cart.forEach(item => {
+        total += item.price * item.qty;
+        html += `
+          <div class="item">
+            <span>${item.name} (x${item.qty})</span>
+            <span>₹${item.price * item.qty}</span>
+          </div>
+        `;
+      });
+
+      cartBox.innerHTML = html;
+      totalBox.innerHTML = "₹" + total;
+
+      return total;
+    }
+
+    // Call functions
+    loadUser();
+    let finalTotal = loadCart();
+
+    // 3️⃣ Place Order
+    document.getElementById("placeBtn").addEventListener("click", async () => {
+
+      let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+      if (cart.length === 0) {
+        alert("Cart is empty!");
+       window.location.href = "index.html";
+      }
+
+      await addDoc(collection(db, "orders"), {
+        mobile: mobile,
+        items: cart,
+        total: finalTotal,
+        timestamp: serverTimestamp()
+      });
+
+      localStorage.removeItem("cart"); // clear cart
+
+      alert("Order Placed Successfully!");
+      window.location.href = "order-success.html";
+    });
+
+  </script>
+
+</body>
+</html>

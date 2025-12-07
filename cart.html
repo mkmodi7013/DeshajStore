@@ -1,15 +1,67 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Your Cart</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Cart - Deshaj Store</title>
   <style>
+    body{
+      font-family: Arial;
+      background: #f7f7f7;
+      padding: 20px;
+    }
+
     .cart-box {
         max-width: 500px;
         margin: auto;
         padding: 20px;
-        border: 1px solid #ddd;
-        background: #fafafa;
+        border-radius: 10px;
+        background: white;
+        box-shadow: 0 0 10px #ddd;
     }
+
+    .cart-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+    }
+
+    .cart-item img {
+      width: 70px;
+      height: 70px;
+      border-radius: 5px;
+      object-fit: cover;
+      margin-right: 15px;
+    }
+
+    .name {
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .price {
+      color: green;
+      font-size: 15px;
+      margin: 5px 0;
+    }
+
+    .qty-box {
+      display: flex;
+      align-items: center;
+      margin-top: 5px;
+    }
+
+    .qty-btn {
+      background: orange;
+      color: white;
+      padding: 5px 10px;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
     .checkout-btn {
         background: #ff6600;
         color: white;
@@ -18,49 +70,93 @@
         font-size: 18px;
         border: none;
         width: 100%;
-        margin-top: 15px;
+        margin-top: 20px;
         cursor: pointer;
         border-radius: 5px;
+    }
+
+    .total {
+      margin-top: 15px;
+      font-size: 20px;
+      font-weight: bold;
+      text-align: right;
     }
   </style>
 </head>
 <body>
+<div id="header"></div>
 
+<script>
+  // Load header.html into this page
+  fetch('header.html')
+    .then(response => response.text())
+    .then(data => {
+      document.getElementById('header').innerHTML = data;
+    })
+    .catch(err => console.error('Header load error:', err));
+</script>
   <div class="cart-box">
       <h2>Your Cart</h2>
 
       <div id="cartItems"></div>
 
-      <button class="checkout-btn" onclick="goToCheckout()">Proceed to Checkout</button>
+      <div class="total" id="totalBox">Total: ₹0</div>
+
+      <button class="checkout-btn" id="checkoutBtn">Proceed to Checkout</button>
   </div>
 
-  <script src="cart.js"></script>
-
   <script>
-    loadCart();
-
+    // Load Cart Items
     function loadCart() {
         let cart = JSON.parse(localStorage.getItem("cart")) || [];
+        const cartItemsBox = document.getElementById("cartItems");
+        const totalBox = document.getElementById("totalBox");
 
         if (cart.length === 0) {
-            document.getElementById("cartItems").innerHTML = "<p>No items in cart</p>";
+            cartItemsBox.innerHTML = "<p>No items in cart</p>";
+            totalBox.innerText = "Total: ₹0";
             return;
         }
 
         let html = "";
-        cart.forEach(item => {
+        let total = 0;
+
+        cart.forEach((item, index) => {
+            let img = Array.isArray(item.image) ? item.image[0] : item.image;
+            total += item.price * item.qty;
+
             html += `
-              <div style="margin-bottom:10px; padding:10px; border-bottom:1px solid #ccc;">
-                <p><b>Product ID:</b> ${item.id}</p>
-                <p><b>Qty:</b> ${item.qty}</p>
+              <div class="cart-item">
+                <img src="${img}">
+                <div>
+                  <div class="name">${item.name}</div>
+                  <div class="price">₹${item.price}</div>
+                  <div class="qty-box">
+                    <button class="qty-btn" onclick="updateQty(${index}, -1)">-</button>
+                    <span style="margin: 0 10px;">${item.qty}</span>
+                    <button class="qty-btn" onclick="updateQty(${index}, 1)">+</button>
+                  </div>
+                </div>
               </div>
             `;
         });
 
-        document.getElementById("cartItems").innerHTML = html;
+        cartItemsBox.innerHTML = html;
+        totalBox.innerHTML = "Total: ₹" + total;
     }
 
-    function goToCheckout() {
+    // Update Quantity
+    function updateQty(index, change) {
+        let cart = JSON.parse(localStorage.getItem("cart")) || [];
+        cart[index].qty += change;
+        if (cart[index].qty <= 0) cart.splice(index, 1);
+        localStorage.setItem("cart", JSON.stringify(cart));
+        loadCart();
+    }
+    window.updateQty = updateQty;
+
+    // Checkout Button Click — NO LOGIN CHECK
+    document.getElementById("checkoutBtn").addEventListener("click", () => {
         let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
         if (cart.length === 0) {
@@ -68,9 +164,10 @@
             return;
         }
 
-        // Go to checkout page
-        window.location.href = "checkout.html";
-    }
+        window.location.href = "checkout.html";  // Always go to checkout page
+    });
+
+    loadCart();
   </script>
 
 </body>

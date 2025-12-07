@@ -22,10 +22,17 @@
 </head>
 <body>
 
-<div class="header">
-  Deshaj Store
-  <span onclick="goToCart()">🛒</span>
-</div>
+<div id="header"></div>
+
+<script>
+  // Load header.html into this page
+  fetch('header.html')
+    .then(response => response.text())
+    .then(data => {
+      document.getElementById('header').innerHTML = data;
+    })
+    .catch(err => console.error('Header load error:', err));
+</script>
 
 <h2>Organic Products</h2>
 <div class="grid" id="productList">Loading products...</div>
