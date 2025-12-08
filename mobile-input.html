@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mobile Verification - Deshaj Store</title>
+<style>
+  body {
+    font-family: Arial;
+    background: #f7f7f7;
+    padding: 20px;
+  }
+  .box {
+    max-width: 500px;
+    margin: 50px auto;
+    padding: 20px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 0 10px #ccc;
+  }
+  input {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+  }
+  button {
+    width: 100%;
+    background: #ff6600;
+    color: white;
+    padding: 12px;
+    border: none;
+    font-size: 18px;
+    margin-top: 20px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  .user-details {
+    margin-top: 20px;
+    background: #f0f0f0;
+    padding: 15px;
+    border-radius: 8px;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="box">
+  <h2>Enter Mobile Number</h2>
+  <input type="text" id="mobileInput" placeholder="10-digit mobile number">
+  <button id="submitBtn">Submit</button>
+
+  <div class="user-details" id="userDetails">
+    <h3>User Details</h3>
+    <p><b>Name:</b> <span id="nameSpan"></span></p>
+    <p><b>Mobile:</b> <span id="mobileSpan"></span></p>
+    <p><b>Address:</b> <span id="addressSpan"></span></p>
+    <p><b>Pincode:</b> <span id="pincodeSpan"></span></p>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA6izuR2_oyHbAVhkIVkH0OHj6yAOduD_8",
+  authDomain: "apna-kitchen-acdcc.firebaseapp.com",
+  projectId: "apna-kitchen-acdcc",
+  storageBucket: "apna-kitchen-acdcc.appspot.com",
+  messagingSenderId: "129562055761",
+  appId: "1:129562055761:web:baa01f9fea6f8eed025470"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const mobileInput = document.getElementById("mobileInput");
+const submitBtn = document.getElementById("submitBtn");
+
+const userDetails = document.getElementById("userDetails");
+const nameSpan = document.getElementById("nameSpan");
+const mobileSpan = document.getElementById("mobileSpan");
+const addressSpan = document.getElementById("addressSpan");
+const pincodeSpan = document.getElementById("pincodeSpan");
+
+submitBtn.addEventListener("click", async () => {
+  const mobile = mobileInput.value.trim();
+
+  if (!/^[0-9]{10}$/.test(mobile)) {
+    alert("Enter valid 10-digit mobile number");
+    return;
+  }
+
+  const userRef = doc(db, "users", mobile);
+  const userSnap = await getDoc(userRef);
+
+  if (userSnap.exists()) {
+    const data = userSnap.data();
+    userDetails.style.display = "block";
+
+    nameSpan.textContent = data.name;
+    mobileSpan.textContent = data.mobile;
+    addressSpan.textContent = data.address;
+    pincodeSpan.textContent = data.pincode;
+
+    // Save in localStorage for next pages
+    localStorage.setItem("userMobile", data.mobile);
+    localStorage.setItem("userName", data.name);
+    localStorage.setItem("userAddress", data.address);
+    localStorage.setItem("userPincode", data.pincode);
+
+  } else {
+    // Redirect to registration if user not found
+    window.location.href = "register.html";
+  }
+});
+</script>
+
+</body>
+</html>
