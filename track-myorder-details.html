@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Track Your Orders - Deshaj Store</title>
+<style>
+  body { font-family: Arial; background: #f7f7f7; padding: 20px; margin:0; }
+  h2 { text-align: center; color: orange; margin-bottom: 20px; }
+
+  .input-box { text-align:center; margin-bottom:20px; }
+  input[type="text"] { padding:8px 12px; width:200px; border-radius:6px; border:1px solid #ccc; font-size:14px; }
+  button { padding:8px 14px; border:none; border-radius:6px; background:orange; color:#fff; cursor:pointer; font-size:14px; margin-left:8px; }
+
+  .order-box { background: #fff; padding:15px; margin-bottom:15px; border-radius:10px; box-shadow:0 0 8px #ccc; }
+  .order-header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; }
+  .status-badge { padding:4px 8px; border-radius:6px; color:#fff; font-size:12px; }
+  .badge-pending { background: orange; }
+  .badge-processed { background: blue; }
+  .badge-delivered { background: green; }
+
+  .items { margin-top:10px; }
+  .item { display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #ddd; }
+  .item img { width:50px; height:50px; object-fit:cover; border-radius:4px; }
+  .user-fields, .order-fields { margin-top:8px; font-size:14px; }
+  .field-label { font-weight:bold; }
+</style>
+</head>
+<body>
+
+<h2>Track Your Orders</h2>
+
+<div class="input-box">
+  <input type="text" id="mobileInput" placeholder="Enter your mobile number">
+  <button id="trackBtn">Track Orders</button>
+ <a class="view-btn" href="index.html">Home</a>
+</div>
+
+<div id="loader" style="display:none;">Loading your orders...</div>
+<div id="ordersList" style="display:none;"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getFirestore, collection, getDocs, query, orderBy, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA6izuR2_oyHbAVhkIVkH0OHj6yAOduD_8",
+  authDomain: "apna-kitchen-acdcc.firebaseapp.com",
+  projectId: "apna-kitchen-acdcc",
+  storageBucket: "apna-kitchen-acdcc.appspot.com",
+  messagingSenderId: "129562055761",
+  appId: "1:129562055761:web:baa01f9fea6f8eed025470"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const loader = document.getElementById('loader');
+const ordersList = document.getElementById('ordersList');
+
+document.getElementById('trackBtn').addEventListener('click', fetchOrders);
+
+async function fetchOrders() {
+  const mobile = document.getElementById('mobileInput').value.trim();
+  if(!mobile){
+    alert("Please enter your mobile number.");
+    return;
+  }
+
+  loader.style.display = "block";
+  ordersList.style.display = "none";
+  ordersList.innerHTML = "";
+
+  const q = query(collection(db, "orders"), orderBy("timestamp", "desc"));
+  const snap = await getDocs(q);
+
+  const orders = [];
+  for(const d of snap.docs){
+    const order = { id: d.id, ...d.data() };
+    if(order.mobile === mobile){
+      // fetch user details
+      let userData = { name:"-", mobile:order.mobile, address:"-", pincode:"-", email:"-" };
+      try {
+        const userSnap = await getDoc(doc(db, "users", order.mobile));
+        if(userSnap.exists()) userData = userSnap.data();
+      } catch(e){ console.warn("User fetch error:", e); }
+
+      order.user = userData;
+      if(!order.status) order.status = "Pending";
+      orders.push(order);
+    }
+  }
+
+  loader.style.display = "none";
+  ordersList.style.display = "block";
+
+  if(orders.length === 0){
+    ordersList.innerHTML = "<p>No orders found for this mobile number.</p>";
+    return;
+  }
+
+  orders.forEach(order => {
+    const statusClass = order.status === 'Pending' ? 'badge-pending' : order.status === 'Processed' ? 'badge-processed' : 'badge-delivered';
+    
+    let itemsHTML = "";
+    (order.items || []).forEach(i=>{
+      itemsHTML += `<div class="item">
+        <img src="${i.image || 'https://via.placeholder.com/50'}"/>
+        <span>${i.name} (x${i.qty})</span>
+        <span>₹${i.price*i.qty}</span>
+      </div>`;
+    });
+
+    let userFieldsHTML = "";
+    for(const key in order.user){
+      userFieldsHTML += `<div class="user-fields"><span class="field-label">${key}:</span> ${order.user[key]}</div>`;
+    }
+
+    let orderFieldsHTML = "";
+    for(const key in order){
+      if(["id","user","items","timestamp"].includes(key)) continue;
+      orderFieldsHTML += `<div class="order-fields"><span class="field-label">${key}:</span> ${order[key]}</div>`;
+    }
+
+    ordersList.innerHTML += `
+      <div class="order-box">
+        <div class="order-header">
+          <p><strong>Order ID:</strong> ${order.id}</p>
+          <p><span class="status-badge ${statusClass}">${order.status}</span></p>
+        </div>
+        ${userFieldsHTML}
+        ${orderFieldsHTML}
+        <p><strong>Order Date:</strong> ${order.timestamp ? order.timestamp.toDate().toLocaleString() : '-'}</p>
+        <div class="items">${itemsHTML}</div>
+      </div>
+    `;
+  });
+}
+</script>
+
+</body>
+</html>
