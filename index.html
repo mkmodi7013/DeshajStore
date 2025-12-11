@@ -181,8 +181,12 @@ float: right;
 
 
 <script type="module">
+import { getStockQty } from './stock-utils.js';
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getFirestore, collection, getDocs, query, orderBy, limit } 
+  from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-/* Firebase Config */
+// Firebase already initialized in stock-utils.js, but Firestore needed here too
 const firebaseConfig = {
   apiKey: "AIzaSyA6izuR2_oyHbAVhkIVkH0OHj6yAOduD_8",
   authDomain: "apna-kitchen-acdcc.firebaseapp.com",
@@ -192,42 +196,34 @@ const firebaseConfig = {
   appId: "1:129562055761:web:baa01f9fea6f8eed025470"
 };
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, collection, getDocs, orderBy, query, limit } 
-from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* Load Products */
 async function loadLatest() {
   const box = document.getElementById("latestProducts");
-
-  const q = query(
-    collection(db, "products"),
-    orderBy("createdAt", "desc"),
-    limit(10)
-  );
-
-  const snap = await getDocs(q);
+  const prodQuery = query(collection(db, "products"), orderBy("createdAt", "desc"), limit(10));
+  const snap = await getDocs(prodQuery);
 
   box.innerHTML = "";
 
-  snap.forEach(doc => {
+  for (const doc of snap.docs) {
     const p = doc.data();
     const id = doc.id;
+    const qty = await getStockQty(id);
+    const outOfStock = qty <= 0;
 
     box.innerHTML += `
       <div class="card" onclick="openDetails('${id}')">
         <img src="${p.image}" alt="Product Image">
         <h4>${p.name}</h4>
         <p class="price">₹${p.price}</p>
-        <button onclick="addToCartHandler(event, '${id}', '${p.name}', '${p.price}', '${p.image}')">
-          Add to Cart
+        <button ${outOfStock ? 'disabled style="background:gray;cursor:not-allowed;"' : ''}
+          onclick="addToCartHandler(event,'${id}','${p.name}','${p.price}','${p.image}')">
+          ${outOfStock ? 'Out of Stock' : 'Add to Cart'}
         </button>
       </div>
     `;
-  });
+  }
 }
 
 loadLatest();
@@ -252,46 +248,6 @@ window.addToCartHandler = function(e, id, name, price, image) {
   localStorage.setItem("cart", JSON.stringify(cart));
   alert("Added to Cart!");
 };
-
-/* Go to Cart */
-window.goToCart = function() {
-  window.location.href = "cart.html";
-};
-
-</script>
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js')
-      .then(reg => console.log('Service Worker registered', reg))
-      .catch(err => console.log('Service Worker failed', err));
-  }
-</script>
-<script>
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  const installBtn = document.createElement('button');
-  installBtn.innerText = "Install App";
-  installBtn.style.position = "fixed";
-  installBtn.style.bottom = "20px";
-  installBtn.style.right = "20px";
-  installBtn.style.padding = "10px 15px";
-  installBtn.style.background = "orange";
-  installBtn.style.color = "white";
-  installBtn.style.border = "none";
-  installBtn.style.borderRadius = "6px";
-  installBtn.style.cursor = "pointer";
-  document.body.appendChild(installBtn);
-
-  installBtn.addEventListener('click', async () => {
-    installBtn.style.display = 'none';
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    console.log("User choice: ", outcome);
-    deferredPrompt = null;
-  });
-});
 </script>
 
 

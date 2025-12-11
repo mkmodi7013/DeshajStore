@@ -38,6 +38,9 @@
 <div class="grid" id="productList">Loading products...</div>
 
 <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getStockQty } from './stock-utils.js';  // <-- stock-utils import
 
 const firebaseConfig = {
   apiKey: "AIzaSyA6izuR2_oyHbAVhkIVkH0OHj6yAOduD_8",
@@ -48,52 +51,49 @@ const firebaseConfig = {
   appId: "1:129562055761:web:baa01f9fea6f8eed025470"
 };
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 async function loadProducts() {
   const list = document.getElementById("productList");
-  const snap = await getDocs(collection(db, "products"));
+  const snap = await getDocs(query(collection(db, "products"), orderBy("createdAt", "desc")));
   list.innerHTML = "";
-  
-  snap.forEach(doc => {
+
+  for (const doc of snap.docs) {
     const p = doc.data();
     const id = doc.id;
+
+    // ✅ Check stock using stock-utils.js
+    const qty = await getStockQty(id);
+    const outOfStock = qty <= 0;
+
     list.innerHTML += `
-      <div class="card">
-        <img src="${p.image}" alt="${p.name}" onclick="openDetails('${id}')">
+      <div class="card" onclick="openDetails('${id}')">
+        <img src="${p.image}" alt="${p.name}">
         <h3>${p.name}</h3>
         <p class="price">₹${p.price}</p>
-        <button onclick="addToCartHandler(event,'${id}','${p.name}','${p.price}','${p.image}')">Add to Cart</button>
+        <button ${outOfStock ? 'disabled style="background:gray; cursor:not-allowed;"' : ''}
+          onclick="addToCartHandler(event,'${id}','${p.name}','${p.price}','${p.image}')">
+          ${outOfStock ? 'Out of Stock' : 'Add to Cart'}
+        </button>
       </div>
     `;
-  });
+  }
 }
 
 loadProducts();
 
-/* Open Product Details */
-window.openDetails = function(id){
-  window.location.href="product-details.html?id="+id;
-};
+window.openDetails = id => window.location.href = "product-details.html?id=" + id;
 
-/* Add to Cart with stopPropagation to prevent card click */
-window.addToCartHandler = function(e, id, name, price, image){
+window.addToCartHandler = (e, id, name, price, image) => {
   e.stopPropagation();
   let cart = JSON.parse(localStorage.getItem("cart")) || [];
-  let existing = cart.find(item => item.id===id);
-  if(existing){ existing.qty +=1; } else { cart.push({id,name,price:Number(price),image,qty:1}); }
+  const existing = cart.find(item => item.id === id);
+  if (existing) existing.qty += 1;
+  else cart.push({ id, name, price: Number(price), image, qty: 1 });
   localStorage.setItem("cart", JSON.stringify(cart));
   alert("✅ Added to Cart!");
 };
-
-window.goToCart = function(){
-  window.location.href="cart.html";
-};
-
 </script>
 
 </body>

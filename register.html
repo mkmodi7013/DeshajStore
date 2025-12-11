@@ -21,7 +21,7 @@
       box-shadow: 0 0 10px #ccc;
     }
 
-    input {
+    input, select {
       width: 100%;
       padding: 12px;
       margin-top: 10px;
@@ -64,7 +64,9 @@
     <input type="text" id="address" placeholder="Enter full address">
 
     <label>Pincode</label>
-    <input type="text" id="pincode" placeholder="6-digit pincode">
+    <select id="pincode">
+      <option value="">Select Pincode</option>
+    </select>
 
     <button id="registerBtn">Save & Continue</button>
   </div>
@@ -72,17 +74,17 @@
   <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, collection, getDocs, query, orderBy } 
+      from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-    // Your Firebase Keys
     const firebaseConfig = {
-    apiKey: "AIzaSyA6izuR2_oyHbAVhkIVkH0OHj6yAOduD_8",
-    authDomain: "apna-kitchen-acdcc.firebaseapp.com",
-    projectId: "apna-kitchen-acdcc",
-    storageBucket: "apna-kitchen-acdcc.appspot.com",
-    messagingSenderId: "129562055761",
-    appId: "1:129562055761:web:baa01f9fea6f8eed025470"
-  };
+      apiKey: "AIzaSyA6izuR2_oyHbAVhkIVkH0OHj6yAOduD_8",
+      authDomain: "apna-kitchen-acdcc.firebaseapp.com",
+      projectId: "apna-kitchen-acdcc",
+      storageBucket: "apna-kitchen-acdcc.appspot.com",
+      messagingSenderId: "129562055761",
+      appId: "1:129562055761:web:baa01f9fea6f8eed025470"
+    };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
@@ -90,49 +92,45 @@
     // Load mobile number from previous page
     const mobileField = document.getElementById("mobile");
     const savedMobile = localStorage.getItem("user_mobile");
+    if (savedMobile) { mobileField.value = savedMobile; }
 
-    if (savedMobile) {
-      mobileField.value = savedMobile;
+    // Load serviceable pincodes into dropdown
+    async function loadPincodes() {
+      const select = document.getElementById("pincode");
+      select.innerHTML = '<option value="">Select Pincode</option>'; // default
+
+      const q = query(collection(db, "serviceable_pincodes"), orderBy("pincode", "asc"));
+      const snap = await getDocs(q);
+
+      snap.forEach(docSnap => {
+        const pin = docSnap.data().pincode;
+        const option = document.createElement("option");
+        option.value = pin;
+        option.textContent = pin;
+        select.appendChild(option);
+      });
     }
+
+    loadPincodes();
 
     // Register Button
     document.getElementById("registerBtn").addEventListener("click", async () => {
-
       const name = document.getElementById("name").value.trim();
       const mobile = mobileField.value.trim();
       const address = document.getElementById("address").value.trim();
-      const pincode = document.getElementById("pincode").value.trim();
+      const pincode = document.getElementById("pincode").value;
 
       // Validations
-      if (name.length < 3) {
-        alert("Enter valid name");
-        return;
-      }
-
-      if (address.length < 5) {
-        alert("Enter valid address");
-        return;
-      }
-
-      if (!/^[0-9]{6}$/.test(pincode)) {
-        alert("Enter valid 6-digit pincode");
-        return;
-      }
+      if (name.length < 3) { alert("Enter valid name"); return; }
+      if (address.length < 5) { alert("Enter valid address"); return; }
+      if (!pincode) { alert("Select a serviceable pincode"); return; }
 
       // Save to Firestore
-      await setDoc(doc(db, "users", mobile), {
-        name: name,
-        mobile: mobile,
-        address: address,
-        pincode: pincode
-      });
+      await setDoc(doc(db, "users", mobile), { name, mobile, address, pincode });
 
       alert("Registration successful!");
-
-      // Redirect to checkout
       window.location.href = "checkout.html";
     });
-
   </script>
 
 </body>
