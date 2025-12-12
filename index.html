@@ -79,7 +79,10 @@ body { font-family: Arial, sans-serif; background:#f7f7f7; color:#333; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, collection, getDocs, query, orderBy, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { 
+  getFirestore, collection, getDocs, query, orderBy,
+  addDoc, serverTimestamp 
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 // Firebase Init
 const firebaseConfig = {
@@ -93,23 +96,49 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Suggestion Submit
+// ------------------ SUGGESTION SUBMIT ------------------
 document.getElementById("submitSuggestionBtn").addEventListener("click", async()=>{
   const text=document.getElementById("suggestionInput").value.trim();
   if(!text){alert("Please write something!"); return;}
   try{
-    await addDoc(collection(db,"suggestions"),{suggestion:text,createdAt:serverTimestamp()});
+    await addDoc(collection(db,"suggestions"),{
+      suggestion:text,
+      createdAt:serverTimestamp()
+    });
     alert("Thank you! Your suggestion has been submitted.");
     document.getElementById("suggestionInput").value="";
-  }catch(e){console.error(e); alert("Failed to submit. Try again.");}
+  }catch(e){
+    console.error(e);
+    alert("Failed to submit. Try again.");
+  }
 });
 
-// Load Products
+// ------------------ GET STOCK FROM FIRESTORE ------------------
+async function getStockQty(productId) {
+  try {
+    const snap = await getDocs(collection(db, "stock"));
+    let qty = 0;
+
+    snap.forEach(d => {
+      if (d.id === productId) {
+        qty = d.data().qty || 0;
+      }
+    });
+
+    return qty;
+  } catch (e) {
+    console.error("Stock fetch error:", e);
+    return 0; // treat as out of stock on error
+  }
+}
+
+// ------------------ LOAD PRODUCTS ------------------
 async function loadProducts(){
   const container=document.getElementById("latestProducts");
   const q=query(collection(db,"products"),orderBy("createdAt","desc"));
   const snap=await getDocs(q);
   container.innerHTML="";
+
   for(const d of snap.docs){
     const p=d.data();
     const id=d.id;
@@ -119,26 +148,33 @@ async function loadProducts(){
     const starsVisual=getStarsHTML(rating.avg);
     const reviewText=`Reviews (${rating.total})`;
 
-    const qty=10; // Optional: replace with getStockQty if you have
-    const outOfStock=qty<=0;
+    // ---------- REAL STOCK ----------
+    const qty = await getStockQty(id);
+    const outOfStock = qty <= 0;
 
-   const card=document.createElement("div");
-card.className="card";
+    const card=document.createElement("div");
+    card.className="card";
 
-// Make whole card clickable except buttons and rating
-card.addEventListener("click",()=> {
-  window.location.href = `product-details.html?id=${id}`;
-});
+    card.addEventListener("click",()=> {
+      window.location.href = `product-details.html?id=${id}`;
+    });
 
-card.innerHTML=`
-  <img src="${p.image}">
-  <h4>${p.name}</h4>
-  <p class="price">₹${p.price}</p>
-  <div class="avg-rating" onclick="event.stopPropagation(); showReviews('${id}','${p.name}')">${starsVisual} ${reviewText}</div>
-  <button ${outOfStock?"disabled style='background:gray;cursor:not-allowed;'":""} onclick="event.stopPropagation(); addToCart(event,'${id}','${p.name}','${p.price}','${p.image}')">
-    ${outOfStock?"Out of Stock":"Add to Cart"}
-  </button>
-`;
+    card.innerHTML=`
+      <img src="${p.image}">
+      <h4>${p.name}</h4>
+      <p class="price">₹${p.price}</p>
+
+      <div class="avg-rating" onclick="event.stopPropagation(); showReviews('${id}','${p.name}')">
+        ${starsVisual} ${reviewText}
+      </div>
+
+      <button 
+        ${outOfStock ? "disabled style='background:gray;cursor:not-allowed;'" : ""}
+        onclick="event.stopPropagation(); addToCart(event,'${id}','${p.name}','${p.price}','${p.image}')"
+      >
+        ${outOfStock ? "Out of Stock" : "Add to Cart"}
+      </button>
+    `;
 
     container.appendChild(card);
   }
@@ -158,7 +194,8 @@ window.addToCart=(e,id,name,price,image)=>{
   e.stopPropagation();
   let cart=JSON.parse(localStorage.getItem("cart"))||[];
   let existing=cart.find(it=>it.id===id);
-  if(existing){existing.qty+=1;} else {cart.push({id,name,price:Number(price),image,qty:1});}
+  if(existing){existing.qty+=1;}
+  else {cart.push({id,name,price:Number(price),image,qty:1});}
   localStorage.setItem("cart",JSON.stringify(cart));
   alert("Added to Cart!");
 };
@@ -181,9 +218,11 @@ window.showReviews=async(pid,name)=>{
   pop.style.display="flex";
   const box=document.getElementById("popupReviews");
   box.innerHTML="Loading...";
+
   try{
     const snap=await getDocs(query(collection(db,"reviews",pid,"items"),orderBy("createdAt","desc")));
     if(snap.empty){box.innerHTML="<p>No reviews yet.</p>"; return;}
+
     let html="";
     snap.forEach(d=>{
       const r=d.data();
@@ -193,7 +232,11 @@ window.showReviews=async(pid,name)=>{
       </div>`;
     });
     box.innerHTML=html;
-  }catch(e){console.error(e); box.innerHTML="<p>Failed to load.</p>";}
+
+  }catch(e){
+    console.error(e);
+    box.innerHTML="<p>Failed to load.</p>";
+  }
 };
 
 // Close Popup
