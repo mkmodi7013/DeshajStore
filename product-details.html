@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Product Details</title>
 
 <style>
@@ -28,13 +28,61 @@
   h2 { margin-top: 15px; }
   .price { font-size: 22px; color: green; margin: 10px 0; }
   .desc { margin-top: 10px; font-size: 15px; color: #666; }
+  .review-box {
+    background: #fff;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 10px;
+    box-shadow: 0 0 10px #ccc;
+  }
+
+  .review-box textarea {
+    width: 100%;
+    height: 80px;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    margin-top: 10px;
+    resize: none;
+  }
+
+  .review-box button {
+    margin-top: 10px;
+    width: 100%;
+    background: orange;
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  .stars {
+    font-size: 26px;
+    color: #ccc;
+    cursor: pointer;
+    letter-spacing: 3px;
+  }
+
+  .stars span.active {
+    color: gold;
+  }
+
+  .single-review {
+    background: #fff;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    box-shadow: 0 0 5px #ddd;
+  }
 </style>
 </head>
 <body>
 <div id="header"></div>
 
 <script>
-  // Load header.html into this page
+  // Load header.html into this page (keeps your behaviour)
   fetch('header.html')
     .then(response => response.text())
     .then(data => {
@@ -42,11 +90,18 @@
     })
     .catch(err => console.error('Header load error:', err));
 </script>
+
 <div class="box" id="productBox">Loading...</div>
 
 <script type="module">
+// ---------------------- Firebase imports (modular) ----------------------
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import {
+  getFirestore, doc, getDoc,
+  collection, addDoc, serverTimestamp, query, orderBy, getDocs
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-// Firebase Config
+// ---------------------- Firebase config (your original) ----------------------
 const firebaseConfig = {
   apiKey: "AIzaSyA6izuR2_oyHbAVhkIVkH0OHj6yAOduD_8",
   authDomain: "apna-kitchen-acdcc.firebaseapp.com",
@@ -56,24 +111,17 @@ const firebaseConfig = {
   appId: "1:129562055761:web:baa01f9fea6f8eed025470"
 };
 
-// Firebase Imports
-import { initializeApp } 
-from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-
-import { 
-  getFirestore, doc, getDoc 
-} 
-from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-
-// Init
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Get Product ID
+// ---------------------- Get product id ----------------------
 const urlParams = new URLSearchParams(window.location.search);
 const id = urlParams.get("id");
 
-// Load ONE Product
+// Keep selectedRating in a scope accessible to submitReview
+let selectedRating = 0;
+
+// ---------------------- Load product and inject review HTML ----------------------
 async function loadProduct() {
   const box = document.getElementById("productBox");
 
@@ -82,29 +130,178 @@ async function loadProduct() {
     return;
   }
 
-  const docRef = doc(db, "products", id);
-  const snap = await getDoc(docRef);
+  try {
+    const docRef = doc(db, "products", id);
+    const snap = await getDoc(docRef);
 
-  if (!snap.exists()) {
-    box.innerHTML = "Product Not Found!";
+    if (!snap.exists()) {
+      box.innerHTML = "Product Not Found!";
+      return;
+    }
+
+    const p = snap.data();
+    const img = Array.isArray(p.image) ? p.image[0] : p.image;
+
+    // Insert original product layout + review HTML (no design changes)
+    box.innerHTML = `
+      <img src="${img || ''}" alt="product image">
+      <h2>${p.name || ''}</h2>
+      <div class="price">₹${p.price ?? ''}</div>
+      <div class="desc">${p.description || p.desc || "No description available"}</div>
+
+      <!-- Rating & Review Box -->
+      <div class="review-box">
+        <h3>Rate & Review</h3>
+
+        <div class="stars" id="ratingStars">
+          <span data-value="1">★</span>
+          <span data-value="2">★</span>
+          <span data-value="3">★</span>
+          <span data-value="4">★</span>
+          <span data-value="5">★</span>
+        </div>
+
+        <textarea id="reviewText" placeholder="Write your review..." maxlength="300"></textarea>
+
+        <button id="submitReviewBtn">Submit Review</button>
+      </div>
+
+      <h3 style="margin-top:20px;">Customer Reviews</h3>
+      <div id="reviewsList">Loading reviews...</div>
+    `;
+
+    // After HTML injected, initialize stars and button
+    initStarsAndButton();
+
+    // Load reviews for this product
+    await loadReviews(id);
+
+  } catch (err) {
+    console.error("Error loading product:", err);
+    document.getElementById("productBox").innerHTML = "Error loading product.";
+  }
+}
+
+// ---------------------- Initialize stars & wire submit button ----------------------
+function initStarsAndButton() {
+  const starsDiv = document.getElementById("ratingStars");
+  if (!starsDiv) {
+    console.error("ratingStars element not found");
     return;
   }
 
-  const p = snap.data();
+  // Reset any previous selection
+  selectedRating = 0;
+  const starElements = starsDiv.querySelectorAll("span");
+  starElements.forEach(s => s.classList.remove("active"));
 
-  const img = Array.isArray(p.image) ? p.image[0] : p.image;
+  starElements.forEach((star) => {
+    star.style.cursor = "pointer";
+    star.addEventListener("click", function () {
+      selectedRating = Number(this.dataset.value);
+      // update visual
+      starElements.forEach(s => {
+        const v = Number(s.dataset.value);
+        if (v <= selectedRating) s.classList.add("active");
+        else s.classList.remove("active");
+      });
+    });
+  });
 
-  box.innerHTML = `
-    <img src="${img}">
-    <h2>${p.name}</h2>
-    <div class="price">₹${p.price}</div>
-    <div class="desc">${p.description || "No description available"}</div>
-  `;
+  // Expose submitReview to global so onclick handlers work and attach click to button
+  window.submitReview = async function submitReview() {
+    const reviewArea = document.getElementById("reviewText");
+    if (!reviewArea) {
+      alert("Review text area not found.");
+      return;
+    }
+    const reviewText = reviewArea.value.trim();
+
+    if (!selectedRating) {
+      alert("Please select a rating!");
+      return;
+    }
+    if (!reviewText) {
+      alert("Please write something!");
+      return;
+    }
+
+    try {
+      await addDoc(collection(db, "reviews", id, "items"), {
+        rating: Number(selectedRating),
+        review: reviewText,
+        createdAt: serverTimestamp()
+      });
+
+      alert("Review submitted!");
+      reviewArea.value = "";
+      selectedRating = 0;
+      starElements.forEach(s => s.classList.remove("active"));
+      // reload reviews after submit
+      await loadReviews(id);
+    } catch (e) {
+      console.error("Failed to submit review:", e);
+      alert("Failed to submit review. See console for details.");
+    }
+  };
+
+  // also attach the button's click to the same function (so both ways work)
+  const btn = document.getElementById("submitReviewBtn");
+  if (btn) {
+    btn.addEventListener("click", () => window.submitReview());
+  }
 }
 
+// ---------------------- Load reviews and render ----------------------
+async function loadReviews(productId) {
+  const reviewsBox = document.getElementById("reviewsList");
+  if (!reviewsBox) return;
+
+  try {
+    const q = query(collection(db, "reviews", productId, "items"), orderBy("createdAt", "desc"));
+    const snap = await getDocs(q);
+
+    if (snap.empty) {
+      reviewsBox.innerHTML = "<p>No reviews yet.</p>";
+      return;
+    }
+
+    let html = "";
+    snap.forEach(docItem => {
+      const r = docItem.data();
+      const stars = "★".repeat(r.rating || 0) + "☆".repeat(5 - (r.rating || 0));
+      const text = r.review || "";
+      html += `
+        <div class="single-review">
+          <div style="color:gold;font-size:18px;">${stars}</div>
+          <p style="margin:6px 0;">${escapeHtml(text)}</p>
+          <small style="color:#999;">${r.createdAt && r.createdAt.toDate ? r.createdAt.toDate().toLocaleString() : ""}</small>
+        </div>
+      `;
+    });
+
+    reviewsBox.innerHTML = html;
+
+  } catch (e) {
+    console.error("Error loading reviews:", e);
+    reviewsBox.innerHTML = "<p>Failed to load reviews.</p>";
+  }
+}
+
+// ---------------------- Utility: basic escaping to avoid HTML injection in review text ----------------------
+function escapeHtml(unsafe) {
+  if (!unsafe) return "";
+  return unsafe
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+// ---------------------- Kick off ----------------------
 loadProduct();
 
 </script>
-
 </body>
 </html>

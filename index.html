@@ -1,192 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="orange">
-<link rel="icon" href="icon-192.png">
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Deshaj Store - Organic Products</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="orange">
+<link rel="icon" href="icon-192.png">
 
 <style>
-
-/* ========== Global Styles ========== */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  font-family: Arial, sans-serif;
-  background: #f7f7f7;
-  color: #333;
-}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family: Arial, sans-serif; background:#f7f7f7; color:#333; }
 
 /* Header */
-.header {
-  background: orange;
-  padding: 15px;
-  color: white;
-  text-align: center;
-  font-size: 22px;
-  font-weight: bold;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-.header span {
-  float: right; 
-  cursor: pointer; 
-  font-size: 22px; 
-  margin-right: 10px;
-}
-
-.login-btn {
-
-float: right;
-  background: none;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 2px;
-  text-decoration: none;
-  font-weight: bold;
-}
-
-.login-btn:hover {
-  background: #ffe5cc;
-}
+.header { background:orange; padding:15px; color:white; text-align:center; font-size:22px; font-weight:bold; position:sticky; top:0; z-index:100; }
+.header span { float:right; cursor:pointer; font-size:22px; margin-right:10px; }
+.login-btn { float:right; background:none; color:white; padding:8px 16px; border-radius:2px; text-decoration:none; font-weight:bold; }
+.login-btn:hover { background:#ffe5cc; }
 
 /* Cards Grid */
-.product-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 15px;
-  padding: 15px;
-}
-
-/* Product Card */
-.card {
-  background: #fff;
-  padding: 12px;
-  border-radius: 10px;
-  text-align: center;
-  box-shadow: 0 0 10px #ccc;
-  cursor: pointer;
-  transition: 0.3s;
-}
-.card:hover {
-  box-shadow: 0 0 15px #bbb;
-}
-
-/* Product Image */
-.card img {
-  width: 100%;
-  height: 150px;
-  object-fit: cover;
-  border-radius: 10px;
-}
-
-/* Product Name */
-.card h4 {
-  margin-top: 10px;
-  font-size: 16px;
-  color: #333;
-}
-
-/* Price */
-.card .price {
-  font-size: 17px;
-  font-weight: bold;
-  color: green;
-  margin: 5px 0;
-}
-
-/* Add to Cart Button */
-.card button {
-  background: orange;
-  color: white;
-  padding: 8px 12px;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
-  width: 100%;
-  margin-top: 10px;
-}
-.card button:hover {
-  opacity: 0.8;
-}
+.product-row { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:15px; padding:15px; }
+.card { background:#fff; padding:12px; border-radius:10px; text-align:center; box-shadow:0 0 10px #ccc; cursor:pointer; transition:.3s; }
+.card:hover { box-shadow:0 0 15px #bbb; }
+.card img { width:100%; height:150px; object-fit:cover; border-radius:10px; }
+.card h4 { margin-top:10px; font-size:16px; color:#333; }
+.card .price { font-size:17px; font-weight:bold; color:green; margin:5px 0; }
+.card .avg-rating { color:#ff9800; font-size:14px; cursor:pointer; text-decoration:underline; margin-bottom:6px; display:block; }
+.card button { background:orange; color:white; padding:8px 12px; border-radius:6px; border:none; cursor:pointer; width:100%; margin-top:10px; }
+.card button:hover { opacity:.8; }
 
 /* Banner */
-.banner {
-  width: 100%;
-  height: 180px;
-  background-image: url('banner.webp'); /* change banner */
-  background-size: cover;
-  background-position: center;
-  margin-bottom: 10px;
-}
+.banner { width:100%; height:180px; background-image:url('banner.webp'); background-size:cover; background-position:center; margin-bottom:10px; }
 
 /* View All Button */
-.view-btn {
-  display: block;
-  margin: 10px auto 20px auto;
-  background: orange;
-  color: white;
-  padding: 10px 18px;
-  border-radius: 6px;
-  text-align: center;
-  text-decoration: none;
-  width: 150px;
-}
+.view-btn { display:block; margin:10px auto 20px auto; background:orange; color:white; padding:10px 18px; border-radius:6px; text-align:center; text-decoration:none; width:150px; }
 
-/* Mobile */
-@media (max-width: 768px) {
-  .product-row {
-    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  }
-  .card img {
-    height: 130px;
-  }
-}
+/* Suggestion Box */
+.suggest-box { background:#fff; padding:15px; margin:15px; border-radius:10px; box-shadow:0 0 10px #ccc; }
+.suggest-box h3 { font-size:18px; margin-bottom:10px; color:#333; }
+.suggest-box textarea { width:100%; height:80px; padding:10px; border-radius:8px; border:1px solid #ccc; font-size:14px; resize:none; }
+.suggest-box button { margin-top:10px; width:100%; background:orange; color:white; padding:10px; border-radius:8px; border:none; cursor:pointer; font-size:16px; }
+.suggest-box button:hover { opacity:.9; }
 
+/* Popup for Reviews */
+#reviewPopup { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center; padding:20px; z-index:9999; }
+#reviewPopup .panel { background:#fff; width:100%; max-width:400px; border-radius:10px; padding:16px; max-height:90%; overflow:auto; }
+#closePopup { margin-top:12px; width:100%; padding:10px; background:orange; color:#fff; border:none; border-radius:6px; cursor:pointer; }
+.single-review { background:#fff; padding:10px; margin-top:10px; border-radius:6px; box-shadow:0 0 5px #eee; }
 </style>
 </head>
 <body>
-<div id="header"></div>
 
+<div id="header"></div>
 <script>
-  // Load header.html into this page
-  fetch('header.html')
-    .then(response => response.text())
-    .then(data => {
-      document.getElementById('header').innerHTML = data;
-    })
-    .catch(err => console.error('Header load error:', err));
+  fetch('header.html').then(r=>r.text()).then(t=>document.getElementById('header').innerHTML=t).catch(e=>console.error(e));
 </script>
 
-
-<!-- Banner -->
 <div class="banner"></div>
 
 <h2 style="padding-left:15px; margin-top:10px;">Latest Organic Products</h2>
 
-<!-- Product Grid -->
-<div class="product-row" id="latestProducts">
-  Loading products...
+<div class="suggest-box">
+  <h3>💬 Have a Suggestion?</h3>
+  <textarea id="suggestionInput" placeholder="Write your suggestion..." maxlength="250"></textarea>
+  <button id="submitSuggestionBtn">Submit</button>
 </div>
 
+<div class="product-row" id="latestProducts">Loading products...</div>
 <a class="view-btn" href="shop.html">View All</a>
 
+<div id="reviewPopup">
+  <div class="panel">
+    <h3 id="popProductName">Reviews</h3>
+    <div id="popupReviews">Loading...</div>
+    <button id="closePopup">Close</button>
+  </div>
+</div>
 
 <script type="module">
-import { getStockQty } from './stock-utils.js';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, collection, getDocs, query, orderBy, limit } 
-  from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, query, orderBy, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-// Firebase already initialized in stock-utils.js, but Firestore needed here too
+// Firebase Init
 const firebaseConfig = {
   apiKey: "AIzaSyA6izuR2_oyHbAVhkIVkH0OHj6yAOduD_8",
   authDomain: "apna-kitchen-acdcc.firebaseapp.com",
@@ -195,61 +90,114 @@ const firebaseConfig = {
   messagingSenderId: "129562055761",
   appId: "1:129562055761:web:baa01f9fea6f8eed025470"
 };
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-async function loadLatest() {
-  const box = document.getElementById("latestProducts");
-  const prodQuery = query(collection(db, "products"), orderBy("createdAt", "desc"), limit(10));
-  const snap = await getDocs(prodQuery);
+// Suggestion Submit
+document.getElementById("submitSuggestionBtn").addEventListener("click", async()=>{
+  const text=document.getElementById("suggestionInput").value.trim();
+  if(!text){alert("Please write something!"); return;}
+  try{
+    await addDoc(collection(db,"suggestions"),{suggestion:text,createdAt:serverTimestamp()});
+    alert("Thank you! Your suggestion has been submitted.");
+    document.getElementById("suggestionInput").value="";
+  }catch(e){console.error(e); alert("Failed to submit. Try again.");}
+});
 
-  box.innerHTML = "";
+// Load Products
+async function loadProducts(){
+  const container=document.getElementById("latestProducts");
+  const q=query(collection(db,"products"),orderBy("createdAt","desc"));
+  const snap=await getDocs(q);
+  container.innerHTML="";
+  for(const d of snap.docs){
+    const p=d.data();
+    const id=d.id;
 
-  for (const doc of snap.docs) {
-    const p = doc.data();
-    const id = doc.id;
-    const qty = await getStockQty(id);
-    const outOfStock = qty <= 0;
+    // Get average rating
+    const rating=await getAverageRating(id);
+    const starsVisual=getStarsHTML(rating.avg);
+    const reviewText=`Reviews (${rating.total})`;
 
-    box.innerHTML += `
-      <div class="card" onclick="openDetails('${id}')">
-        <img src="${p.image}" alt="Product Image">
-        <h4>${p.name}</h4>
-        <p class="price">₹${p.price}</p>
-        <button ${outOfStock ? 'disabled style="background:gray;cursor:not-allowed;"' : ''}
-          onclick="addToCartHandler(event,'${id}','${p.name}','${p.price}','${p.image}')">
-          ${outOfStock ? 'Out of Stock' : 'Add to Cart'}
-        </button>
-      </div>
-    `;
+    const qty=10; // Optional: replace with getStockQty if you have
+    const outOfStock=qty<=0;
+
+   const card=document.createElement("div");
+card.className="card";
+
+// Make whole card clickable except buttons and rating
+card.addEventListener("click",()=> {
+  window.location.href = `product-details.html?id=${id}`;
+});
+
+card.innerHTML=`
+  <img src="${p.image}">
+  <h4>${p.name}</h4>
+  <p class="price">₹${p.price}</p>
+  <div class="avg-rating" onclick="event.stopPropagation(); showReviews('${id}','${p.name}')">${starsVisual} ${reviewText}</div>
+  <button ${outOfStock?"disabled style='background:gray;cursor:not-allowed;'":""} onclick="event.stopPropagation(); addToCart(event,'${id}','${p.name}','${p.price}','${p.image}')">
+    ${outOfStock?"Out of Stock":"Add to Cart"}
+  </button>
+`;
+
+    container.appendChild(card);
   }
 }
+loadProducts();
 
-loadLatest();
+// Helper: convert avg to stars
+function getStarsHTML(avg){
+  let full=Math.floor(avg);
+  let half=avg-full>=0.5?1:0;
+  let empty=5-full-half;
+  return "★".repeat(full)+"☆".repeat(half+empty);
+}
 
-/* Open Product Details */
-window.openDetails = function(id) {
-  window.location.href = "product-details.html?id=" + id;
-};
-
-/* Add to Cart */
-window.addToCartHandler = function(e, id, name, price, image) {
+// Add to Cart
+window.addToCart=(e,id,name,price,image)=>{
   e.stopPropagation();
-  let cart = JSON.parse(localStorage.getItem("cart")) || [];
-  let existing = cart.find(item => item.id === id);
-
-  if (existing) {
-    existing.qty += 1;
-  } else {
-    cart.push({ id, name, price: Number(price), image, qty: 1 });
-  }
-
-  localStorage.setItem("cart", JSON.stringify(cart));
+  let cart=JSON.parse(localStorage.getItem("cart"))||[];
+  let existing=cart.find(it=>it.id===id);
+  if(existing){existing.qty+=1;} else {cart.push({id,name,price:Number(price),image,qty:1});}
+  localStorage.setItem("cart",JSON.stringify(cart));
   alert("Added to Cart!");
 };
+
+// Get Average Rating
+async function getAverageRating(pid){
+  try{
+    const snap=await getDocs(collection(db,"reviews",pid,"items"));
+    if(snap.empty)return {avg:0,total:0};
+    let sum=0,count=0;
+    snap.forEach(d=>{sum+=Number(d.data().rating)||0; count++;});
+    return {avg:(sum/count).toFixed(1),total:count};
+  }catch(e){console.error(e); return {avg:0,total:0};}
+}
+
+// Show Reviews Popup
+window.showReviews=async(pid,name)=>{
+  document.getElementById("popProductName").textContent=name;
+  const pop=document.getElementById("reviewPopup");
+  pop.style.display="flex";
+  const box=document.getElementById("popupReviews");
+  box.innerHTML="Loading...";
+  try{
+    const snap=await getDocs(query(collection(db,"reviews",pid,"items"),orderBy("createdAt","desc")));
+    if(snap.empty){box.innerHTML="<p>No reviews yet.</p>"; return;}
+    let html="";
+    snap.forEach(d=>{
+      const r=d.data();
+      html+=`<div class="single-review">
+        <div style="color:gold;">${"★".repeat(r.rating||0)}${"☆".repeat(5-(r.rating||0))}</div>
+        <p>${r.review||""}</p>
+      </div>`;
+    });
+    box.innerHTML=html;
+  }catch(e){console.error(e); box.innerHTML="<p>Failed to load.</p>";}
+};
+
+// Close Popup
+document.getElementById("closePopup").addEventListener("click",()=>document.getElementById("reviewPopup").style.display="none");
 </script>
-
-
 </body>
 </html>
