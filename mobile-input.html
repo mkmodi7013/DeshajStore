@@ -5,66 +5,41 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mobile Verification - Deshaj Store</title>
 <style>
-  body {
-    font-family: Arial;
-    background: #f7f7f7;
-    padding: 20px;
-  }
-  .box {
-    max-width: 500px;
-    margin: 50px auto;
-    padding: 20px;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 0 10px #ccc;
-  }
-  input {
-    width: 100%;
-    padding: 12px;
-    margin-top: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 16px;
-  }
-  button {
-    width: 100%;
-    background: #ff6600;
-    color: white;
-    padding: 12px;
-    border: none;
-    font-size: 18px;
-    margin-top: 20px;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  .user-details {
-    margin-top: 20px;
-    background: #f0f0f0;
-    padding: 15px;
-    border-radius: 8px;
-    display: none;
-  }
+  body { font-family: Arial; background: #f7f7f7; padding: 20px; }
+  .box { max-width: 500px; margin: auto; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 0 10px #ccc; }
+  input, select { width: 100%; padding: 12px; margin-top: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; }
+  button { width: 100%; background: #ff6600; color: white; padding: 12px; border: none; font-size: 18px; margin-top: 20px; border-radius: 5px; cursor: pointer; }
+  label { font-weight: bold; margin-top: 10px; display: block; }
+  .user-details { display: none; margin-top: 20px; background: #f0f0f0; padding: 15px; border-radius: 8px; }
 </style>
 </head>
 <body>
 
 <div class="box">
-  <h2>Enter Mobile Number</h2>
-  <input type="text" id="mobileInput" placeholder="10-digit mobile number">
+  <label>Enter Mobile Number</label>
+  <input type="tel" id="mobileInput" placeholder="10-digit mobile number" autocomplete="new-password">
   <button id="submitBtn">Submit</button>
 
   <div class="user-details" id="userDetails">
-    <h3>User Details</h3>
-    <p><b>Name:</b> <span id="nameSpan"></span></p>
-    <p><b>Mobile:</b> <span id="mobileSpan"></span></p>
-    <p><b>Address:</b> <span id="addressSpan"></span></p>
-    <p><b>Pincode:</b> <span id="pincodeSpan"></span></p>
+    <label>Name</label>
+    <input type="text" id="nameInput" placeholder="Name">
+
+    <label>Address</label>
+    <input type="text" id="addressInput" placeholder="Address">
+
+    <label>Pincode</label>
+    <select id="pincodeSelect">
+      <option value="">Select Pincode</option>
+    </select>
+
+    <button id="saveBtn">Edit and Save Details</button>
   </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, query, orderBy } 
+  from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA6izuR2_oyHbAVhkIVkH0OHj6yAOduD_8",
@@ -80,43 +55,65 @@ const db = getFirestore(app);
 
 const mobileInput = document.getElementById("mobileInput");
 const submitBtn = document.getElementById("submitBtn");
-
 const userDetails = document.getElementById("userDetails");
-const nameSpan = document.getElementById("nameSpan");
-const mobileSpan = document.getElementById("mobileSpan");
-const addressSpan = document.getElementById("addressSpan");
-const pincodeSpan = document.getElementById("pincodeSpan");
+const nameInput = document.getElementById("nameInput");
+const addressInput = document.getElementById("addressInput");
+const pincodeSelect = document.getElementById("pincodeSelect");
+const saveBtn = document.getElementById("saveBtn");
 
-submitBtn.addEventListener("click", async () => {
+let currentMobile = "";
+
+// Load pincodes from Firestore
+async function loadPincodes(selectedPin="") {
+  pincodeSelect.innerHTML = '<option value="">Select Pincode</option>';
+  const q = query(collection(db,"serviceable_pincodes"), orderBy("pincode","asc"));
+  const snap = await getDocs(q);
+  snap.forEach(d => {
+    const pin = d.data().pincode;
+    const opt = document.createElement("option");
+    opt.value = pin;
+    opt.textContent = pin;
+    if(pin === selectedPin) opt.selected = true;
+    pincodeSelect.appendChild(opt);
+  });
+}
+
+// Submit mobile number
+submitBtn.addEventListener("click", async ()=>{
   const mobile = mobileInput.value.trim();
+  if(!/^[0-9]{10}$/.test(mobile)){ alert("Enter valid 10-digit mobile number"); return; }
 
-  if (!/^[0-9]{10}$/.test(mobile)) {
-    alert("Enter valid 10-digit mobile number");
-    return;
-  }
-
-  const userRef = doc(db, "users", mobile);
+  const userRef = doc(db,"users",mobile);
   const userSnap = await getDoc(userRef);
 
-  if (userSnap.exists()) {
+  if(userSnap.exists()){
     const data = userSnap.data();
+    currentMobile = mobile;
     userDetails.style.display = "block";
-
-    nameSpan.textContent = data.name;
-    mobileSpan.textContent = data.mobile;
-    addressSpan.textContent = data.address;
-    pincodeSpan.textContent = data.pincode;
-
-    // Save in localStorage for next pages
-    localStorage.setItem("userMobile", data.mobile);
-    localStorage.setItem("userName", data.name);
-    localStorage.setItem("userAddress", data.address);
-    localStorage.setItem("userPincode", data.pincode);
-
+    mobileInput.disabled = true;
+    nameInput.value = data.name || "";
+    addressInput.value = data.address || "";
+    await loadPincodes(data.pincode || "");
   } else {
-    // Redirect to registration if user not found
+    localStorage.setItem("user_mobile", mobile);
     window.location.href = "register.html";
   }
+});
+
+// Save updated user details
+saveBtn.addEventListener("click", async ()=>{
+  if(!currentMobile) return;
+  const name = nameInput.value.trim();
+  const address = addressInput.value.trim();
+  const pincode = pincodeSelect.value;
+  if(!name || !address || !pincode){ alert("Please fill all details"); return; }
+
+  await updateDoc(doc(db,"users",currentMobile), { name, address, pincode });
+  localStorage.setItem("userMobile", currentMobile);
+  localStorage.setItem("userName", name);
+  localStorage.setItem("userAddress", address);
+  localStorage.setItem("userPincode", pincode);
+  alert("Details updated successfully");
 });
 </script>
 

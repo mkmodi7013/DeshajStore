@@ -81,7 +81,7 @@ body { font-family: Arial, sans-serif; background:#f7f7f7; color:#333; }
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { 
   getFirestore, collection, getDocs, query, orderBy,
-  addDoc, serverTimestamp 
+  addDoc, serverTimestamp, where 
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 // Firebase Init
@@ -113,22 +113,19 @@ document.getElementById("submitSuggestionBtn").addEventListener("click", async()
   }
 });
 
-// ------------------ GET STOCK FROM FIRESTORE ------------------
+// ------------------ GET STOCK FROM FIRESTORE (FIXED) ------------------
 async function getStockQty(productId) {
   try {
-    const snap = await getDocs(collection(db, "stock"));
-    let qty = 0;
-
-    snap.forEach(d => {
-      if (d.id === productId) {
-        qty = d.data().qty || 0;
-      }
-    });
-
-    return qty;
+    const q = query(
+      collection(db, "stock"),
+      where("productId", "==", productId)
+    );
+    const snap = await getDocs(q);
+    if (snap.empty) return 0;
+    return Number(snap.docs[0].data().quantity) || 0;
   } catch (e) {
     console.error("Stock fetch error:", e);
-    return 0; // treat as out of stock on error
+    return 0;
   }
 }
 
@@ -143,14 +140,12 @@ async function loadProducts(){
     const p=d.data();
     const id=d.id;
 
-    // Get average rating
     const rating=await getAverageRating(id);
     const starsVisual=getStarsHTML(rating.avg);
     const reviewText=`Reviews (${rating.total})`;
 
-    // ---------- REAL STOCK ----------
     const qty = await getStockQty(id);
-    const outOfStock = qty <= 0;
+    const outOfStock = Number(qty) <= 0;
 
     const card=document.createElement("div");
     card.className="card";
@@ -181,7 +176,6 @@ async function loadProducts(){
 }
 loadProducts();
 
-// Helper: convert avg to stars
 function getStarsHTML(avg){
   let full=Math.floor(avg);
   let half=avg-full>=0.5?1:0;
@@ -189,7 +183,6 @@ function getStarsHTML(avg){
   return "★".repeat(full)+"☆".repeat(half+empty);
 }
 
-// Add to Cart
 window.addToCart=(e,id,name,price,image)=>{
   e.stopPropagation();
   let cart=JSON.parse(localStorage.getItem("cart"))||[];
@@ -200,7 +193,6 @@ window.addToCart=(e,id,name,price,image)=>{
   alert("Added to Cart!");
 };
 
-// Get Average Rating
 async function getAverageRating(pid){
   try{
     const snap=await getDocs(collection(db,"reviews",pid,"items"));
@@ -211,7 +203,6 @@ async function getAverageRating(pid){
   }catch(e){console.error(e); return {avg:0,total:0};}
 }
 
-// Show Reviews Popup
 window.showReviews=async(pid,name)=>{
   document.getElementById("popProductName").textContent=name;
   const pop=document.getElementById("reviewPopup");
@@ -239,7 +230,6 @@ window.showReviews=async(pid,name)=>{
   }
 };
 
-// Close Popup
 document.getElementById("closePopup").addEventListener("click",()=>document.getElementById("reviewPopup").style.display="none");
 </script>
 </body>
