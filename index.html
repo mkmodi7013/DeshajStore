@@ -10,48 +10,53 @@
 
 <style>
 * { box-sizing:border-box; margin:0; padding:0; }
-body { font-family: Arial, sans-serif; background:#f7f7f7; color:#333; transition: 0.3s; }
+body { font-family: Arial, sans-serif; background:#f7f7f7; color:#333; }
 
-/* मोबाइल में बॉटम नेविगेशन के लिए जगह */
-@media (max-width: 768px) {
-  body { padding-bottom: 80px; }
-}
+/* Header */
+.header { background:orange; padding:15px; color:white; text-align:center; font-size:22px; font-weight:bold; position:sticky; top:0; z-index:100; }
+.header span { float:right; cursor:pointer; font-size:22px; margin-right:10px; }
+.login-btn { float:right; background:none; color:white; padding:8px 16px; border-radius:2px; text-decoration:none; font-weight:bold; }
+.login-btn:hover { background:#ffe5cc; }
 
 /* Cards Grid */
 .product-row { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:15px; padding:15px; }
 .card { background:#fff; padding:12px; border-radius:10px; text-align:center; box-shadow:0 0 10px #ccc; cursor:pointer; transition:.3s; }
-.card:hover { box-shadow:0 0 15px #bbb; transform: translateY(-3px); }
-.card img { width:100%; height:150px; object-fit:cover; border-radius:10px; background: #eee; }
-.card h4 { margin-top:10px; font-size:16px; color:#333; height: 40px; overflow: hidden; }
+.card:hover { box-shadow:0 0 15px #bbb; }
+.card img { width:100%; height:150px; object-fit:cover; border-radius:10px; }
+.card h4 { margin-top:10px; font-size:16px; color:#333; }
 .card .price { font-size:17px; font-weight:bold; color:green; margin:5px 0; }
 .card .avg-rating { color:#ff9800; font-size:14px; cursor:pointer; text-decoration:underline; margin-bottom:6px; display:block; }
-.card button { background:orange; color:white; padding:10px; border-radius:6px; border:none; cursor:pointer; width:100%; margin-top:10px; font-weight: bold; }
-.card button:disabled { background:gray; cursor:not-allowed; }
+.card button { background:orange; color:white; padding:8px 12px; border-radius:6px; border:none; cursor:pointer; width:100%; margin-top:10px; }
+.card button:hover { opacity:.8; }
 
 /* Banner */
-.banner { width:100%; height:180px; background: #ddd url('banner.webp') center/cover no-repeat; margin-bottom:10px; }
+.banner { width:100%; height:180px; background-image:url('banner.webp'); background-size:cover; background-position:center; margin-bottom:10px; }
 
 /* View All Button */
-.view-btn { display:block; margin:10px auto 30px auto; background:orange; color:white; padding:12px 20px; border-radius:6px; text-align:center; text-decoration:none; width:160px; font-weight: bold; }
+.view-btn { display:block; margin:10px auto 20px auto; background:orange; color:white; padding:10px 18px; border-radius:6px; text-align:center; text-decoration:none; width:150px; }
 
 /* Suggestion Box */
 .suggest-box { background:#fff; padding:15px; margin:15px; border-radius:10px; box-shadow:0 0 10px #ccc; }
-.suggest-box textarea { width:100%; height:80px; padding:10px; border-radius:8px; border:1px solid #ccc; font-size:14px; resize:none; margin-top: 10px; }
+.suggest-box h3 { font-size:18px; margin-bottom:10px; color:#333; }
+.suggest-box textarea { width:100%; height:80px; padding:10px; border-radius:8px; border:1px solid #ccc; font-size:14px; resize:none; }
 .suggest-box button { margin-top:10px; width:100%; background:orange; color:white; padding:10px; border-radius:8px; border:none; cursor:pointer; font-size:16px; }
+.suggest-box button:hover { opacity:.9; }
 
 /* Popup for Reviews */
-#reviewPopup { position:fixed; inset:0; background:rgba(0,0,0,0.7); display:none; align-items:center; justify-content:center; padding:20px; z-index:10001; }
-#reviewPopup .panel { background:#fff; width:100%; max-width:400px; border-radius:12px; padding:20px; max-height:80%; overflow-y:auto; }
-#closePopup { margin-top:15px; width:100%; padding:10px; background:orange; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight: bold; }
-.single-review { border-bottom: 1px solid #eee; padding:10px 0; }
+#reviewPopup { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center; padding:20px; z-index:9999; }
+#reviewPopup .panel { background:#fff; width:100%; max-width:400px; border-radius:10px; padding:16px; max-height:90%; overflow:auto; }
+#closePopup { margin-top:12px; width:100%; padding:10px; background:orange; color:#fff; border:none; border-radius:6px; cursor:pointer; }
+.single-review { background:#fff; padding:10px; margin-top:10px; border-radius:6px; box-shadow:0 0 5px #eee; }
 
-/* Custom Cart Toast */
-#cartToast { display:none; position:fixed; bottom:85px; left:50%; transform:translateX(-50%); background:#333; color:white; padding:15px 20px; border-radius:12px; z-index:10000; box-shadow:0 5px 20px rgba(0,0,0,0.4); text-align:center; min-width:280px; }
+
 </style>
 </head>
 <body>
 
 <div id="header"></div>
+<script>
+  fetch('header.html').then(r=>r.text()).then(t=>document.getElementById('header').innerHTML=t).catch(e=>console.error(e));
+</script>
 
 <div class="banner"></div>
 
@@ -60,13 +65,12 @@ body { font-family: Arial, sans-serif; background:#f7f7f7; color:#333; transitio
 <div class="suggest-box">
   <h3>💬 Have a Suggestion?</h3>
   <textarea id="suggestionInput" placeholder="Write your suggestion..." maxlength="250"></textarea>
-  <button id="submitSuggestionBtn">Submit Suggestion</button>
+  <button id="submitSuggestionBtn">Submit</button>
 </div>
 
 <div class="product-row" id="latestProducts">Loading products...</div>
-<a class="view-btn" href="shop.html">View All Products</a>
+<a class="view-btn" href="shop.html">View All</a>
 
-<!-- Reviews Popup -->
 <div id="reviewPopup">
   <div class="panel">
     <h3 id="popProductName">Reviews</h3>
@@ -74,24 +78,24 @@ body { font-family: Arial, sans-serif; background:#f7f7f7; color:#333; transitio
     <button id="closePopup">Close</button>
   </div>
 </div>
-
 <!-- Custom Cart Notification -->
-<div id="cartToast">
-  <p id="cartToastMsg" style="margin-bottom:10px;"></p>
+<div id="cartToast" style="display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#333; color:white; padding:15px 25px; border-radius:10px; z-index:10000; box-shadow:0 4px 15px rgba(0,0,0,0.3); text-align:center; min-width:300px;">
+  <p id="cartToastMsg" style="margin-bottom:10px;">Item added to cart!</p>
   <div style="display:flex; gap:10px; justify-content:center;">
-    <button onclick="document.getElementById('cartToast').style.display='none'" style="background:#555; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">Continue</button>
+    <button onclick="document.getElementById('cartToast').style.display='none'" style="background:#666; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">Continue</button>
     <a href="cart.html" style="background:orange; color:white; text-decoration:none; padding:8px 15px; border-radius:5px; font-weight:bold;">Go to Cart</a>
   </div>
 </div>
 
+
 <script type="module">
-import { initializeApp } from "www.gstatic.com";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { 
   getFirestore, collection, getDocs, query, orderBy,
   addDoc, serverTimestamp, where 
-} from "www.gstatic.com";
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-// Firebase Config
+// Firebase Init
 const firebaseConfig = {
   apiKey: "AIzaSyA6izuR2_oyHbAVhkIVkH0OHj6yAOduD_8",
   authDomain: "apna-kitchen-acdcc.firebaseapp.com",
@@ -103,127 +107,159 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 1. Header Load
-fetch('header.html').then(r=>r.text()).then(t=>document.getElementById('header').innerHTML=t);
-
-// 2. Suggestion Logic
-document.getElementById("submitSuggestionBtn").onclick = async () => {
-  const text = document.getElementById("suggestionInput").value.trim();
-  if(!text) return alert("Please enter text");
-  try {
-    await addDoc(collection(db, "suggestions"), { suggestion: text, createdAt: serverTimestamp() });
-    alert("Suggestion sent!");
-    document.getElementById("suggestionInput").value = "";
-  } catch(e) { alert("Error sending"); }
-};
-
-// 3. Optimized Load Products (Parallel Execution)
-async function loadProducts() {
-  const container = document.getElementById("latestProducts");
-  try {
-    const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
-    const snap = await getDocs(q);
-    container.innerHTML = "";
-
-    // सभी प्रॉमिस एक साथ चलाएं (SPEED BOOST)
-    const productDataPromises = snap.docs.map(async (doc) => {
-      const p = doc.data();
-      const id = doc.id;
-      const [rating, qty] = await Promise.all([
-        getAverageRating(id),
-        getStockQty(id)
-      ]);
-      return { id, p, rating, qty };
+// ------------------ SUGGESTION SUBMIT ------------------
+document.getElementById("submitSuggestionBtn").addEventListener("click", async()=>{
+  const text=document.getElementById("suggestionInput").value.trim();
+  if(!text){alert("Please write something!"); return;}
+  try{
+    await addDoc(collection(db,"suggestions"),{
+      suggestion:text,
+      createdAt:serverTimestamp()
     });
+    alert("Thank you! Your suggestion has been submitted.");
+    document.getElementById("suggestionInput").value="";
+  }catch(e){
+    console.error(e);
+    alert("Failed to submit. Try again.");
+  }
+});
 
-    const products = await Promise.all(productDataPromises);
-
-    products.forEach(({ id, p, rating, qty }) => {
-      const isOutOfStock = qty <= 0;
-      const card = document.createElement("div");
-      card.className = "card";
-      card.onclick = () => window.location.href = `product-details.html?id=${id}`;
-      
-      card.innerHTML = `
-        <img src="${p.image}" alt="${p.name}" loading="lazy">
-        <h4>${p.name}</h4>
-        <p class="price">₹${p.price}</p>
-        <div class="avg-rating" onclick="event.stopPropagation(); showReviews('${id}','${p.name}')">
-          ${getStarsHTML(rating.avg)} (${rating.total})
-        </div>
-        <button 
-          ${isOutOfStock ? "disabled" : ""} 
-          onclick="event.stopPropagation(); addToCart(event,'${id}','${p.name}','${p.price}','${p.image}')"
-        >
-          ${isOutOfStock ? "Out of Stock" : "Add to Cart"}
-        </button>
-      `;
-      container.appendChild(card);
-    });
-  } catch(e) { container.innerHTML = "Failed to load products."; }
-}
-
-// 4. Stock Checker
-async function getStockQty(pid) {
+// ------------------ GET STOCK FROM FIRESTORE (FIXED) ------------------
+async function getStockQty(productId) {
   try {
-    const q = query(collection(db, "stock"), where("productId", "==", pid));
+    const q = query(
+      collection(db, "stock"),
+      where("productId", "==", productId)
+    );
     const snap = await getDocs(q);
-    if(snap.empty) return 0;
+    if (snap.empty) return 0;
     return Number(snap.docs[0].data().quantity) || 0;
-  } catch(e) { return 0; }
+  } catch (e) {
+    console.error("Stock fetch error:", e);
+    return 0;
+  }
 }
 
-// 5. Rating System
-async function getAverageRating(pid) {
-  try {
-    const snap = await getDocs(collection(db, "reviews", pid, "items"));
-    if(snap.empty) return { avg: 0, total: 0 };
-    let sum = 0;
-    snap.forEach(d => sum += Number(d.data().rating) || 0);
-    return { avg: (sum / snap.size).toFixed(1), total: snap.size };
-  } catch(e) { return { avg: 0, total: 0 }; }
+// ------------------ LOAD PRODUCTS ------------------
+async function loadProducts(){
+  const container=document.getElementById("latestProducts");
+  const q=query(collection(db,"products"),orderBy("createdAt","desc"));
+  const snap=await getDocs(q);
+  container.innerHTML="";
+
+  for(const d of snap.docs){
+    const p=d.data();
+    const id=d.id;
+
+    const rating=await getAverageRating(id);
+    const starsVisual=getStarsHTML(rating.avg);
+    const reviewText=`Reviews (${rating.total})`;
+
+    const qty = await getStockQty(id);
+    const outOfStock = Number(qty) <= 0;
+
+    const card=document.createElement("div");
+    card.className="card";
+
+    card.addEventListener("click",()=> {
+      window.location.href = `product-details.html?id=${id}`;
+    });
+
+    card.innerHTML=`
+      <img src="${p.image}">
+      <h4>${p.name}</h4>
+      <p class="price">₹${p.price}</p>
+
+      <div class="avg-rating" onclick="event.stopPropagation(); showReviews('${id}','${p.name}')">
+        ${starsVisual} ${reviewText}
+      </div>
+
+      <button 
+        ${outOfStock ? "disabled style='background:gray;cursor:not-allowed;'" : ""}
+        onclick="event.stopPropagation(); addToCart(event,'${id}','${p.name}','${p.price}','${p.image}')"
+      >
+        ${outOfStock ? "Out of Stock" : "Add to Cart"}
+      </button>
+    `;
+
+    container.appendChild(card);
+  }
+}
+loadProducts();
+
+function getStarsHTML(avg){
+  let full=Math.floor(avg);
+  let half=avg-full>=0.5?1:0;
+  let empty=5-full-half;
+  return "★".repeat(full)+"☆".repeat(half+empty);
 }
 
-function getStarsHTML(avg) {
-  return "★".repeat(Math.floor(avg)) + "☆".repeat(5 - Math.floor(avg));
-}
-
-// 6. Show Reviews
-window.showReviews = async (pid, name) => {
-  document.getElementById("popProductName").textContent = name;
-  const pop = document.getElementById("reviewPopup");
-  const box = document.getElementById("popupReviews");
-  pop.style.display = "flex";
-  box.innerHTML = "Loading reviews...";
-
-  const snap = await getDocs(collection(db, "reviews", pid, "items"));
-  box.innerHTML = snap.empty ? "No reviews yet." : "";
-  snap.forEach(d => {
-    const r = d.data();
-    box.innerHTML += `<div class="single-review"><strong>${r.rating} ★</strong><p>${r.comment || ''}</p></div>`;
-  });
-};
-
-document.getElementById("closePopup").onclick = () => document.getElementById("reviewPopup").style.display="none";
-
-// 7. Add to Cart with Custom Toast
 window.addToCart = (e, id, name, price, image) => {
   e.stopPropagation();
+  
   let cart = JSON.parse(localStorage.getItem("cart")) || [];
-  let exist = cart.find(i => i.id === id);
-  if(exist) exist.qty += 1;
-  else cart.push({ id, name, price: Number(price), image, qty: 1 });
+  let existing = cart.find(it => it.id === id);
+  
+  if (existing) {
+    existing.qty += 1;
+  } else {
+    cart.push({ id, name, price: Number(price), image, qty: 1 });
+  }
   
   localStorage.setItem("cart", JSON.stringify(cart));
-  
+
+  // Custom Toast दिखाएं
   const toast = document.getElementById("cartToast");
-  document.getElementById("cartToastMsg").innerText = `✅ ${name} added!`;
+  const msg = document.getElementById("cartToastMsg");
+  
+  msg.innerText = `Added: ${name}`;
   toast.style.display = "block";
-  setTimeout(() => toast.style.display = "none", 4000);
+
+  // 5 सेकंड बाद अपने आप बंद हो जाए (अगर यूजर ने बटन नहीं दबाया)
+  setTimeout(() => {
+    toast.style.display = "none";
+  }, 5000);
 };
 
-// Start
-loadProducts();
+
+async function getAverageRating(pid){
+  try{
+    const snap=await getDocs(collection(db,"reviews",pid,"items"));
+    if(snap.empty)return {avg:0,total:0};
+    let sum=0,count=0;
+    snap.forEach(d=>{sum+=Number(d.data().rating)||0; count++;});
+    return {avg:(sum/count).toFixed(1),total:count};
+  }catch(e){console.error(e); return {avg:0,total:0};}
+}
+
+window.showReviews=async(pid,name)=>{
+  document.getElementById("popProductName").textContent=name;
+  const pop=document.getElementById("reviewPopup");
+  pop.style.display="flex";
+  const box=document.getElementById("popupReviews");
+  box.innerHTML="Loading...";
+
+  try{
+    const snap=await getDocs(query(collection(db,"reviews",pid,"items"),orderBy("createdAt","desc")));
+    if(snap.empty){box.innerHTML="<p>No reviews yet.</p>"; return;}
+
+    let html="";
+    snap.forEach(d=>{
+      const r=d.data();
+      html+=`<div class="single-review">
+        <div style="color:gold;">${"★".repeat(r.rating||0)}${"☆".repeat(5-(r.rating||0))}</div>
+        <p>${r.review||""}</p>
+      </div>`;
+    });
+    box.innerHTML=html;
+
+  }catch(e){
+    console.error(e);
+    box.innerHTML="<p>Failed to load.</p>";
+  }
+};
+
+document.getElementById("closePopup").addEventListener("click",()=>document.getElementById("reviewPopup").style.display="none");
 </script>
 </body>
 </html>
