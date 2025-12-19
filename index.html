@@ -55,7 +55,14 @@ body { font-family: Arial, sans-serif; background:#f7f7f7; color:#333; }
 
 <div id="header"></div>
 <script>
-  fetch('header.html').then(r=>r.text()).then(t=>document.getElementById('header').innerHTML=t).catch(e=>console.error(e));
+  // 'header.html' की जगह 'header.html?v=' + Date.now() लिखें
+fetch('header.html?v=' + Date.now())
+  .then(r => r.text())
+  .then(t => {
+    document.getElementById('header').innerHTML = t;
+  })
+  .catch(e => console.error("Header Load Error:", e));
+
 </script>
 
 <div class="banner"></div>
