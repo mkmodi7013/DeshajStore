@@ -1,11 +1,74 @@
 <!-- header.html -->
-<div style="background: orange; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
+<style>
+  /* डेस्कटॉप के लिए स्टाइल (Default) */
+  .main-header {
+    background: orange;
+    color: white;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: Arial, sans-serif;
+  }
+  .main-header nav {
+    display: flex;
+    gap: 20px;
+  }
+  .nav-item {
+    color: white;
+    text-decoration: none;
+    text-align: center;
+    font-size: 14px;
+  }
+  .nav-item i {
+    font-size: 20px;
+    display: block;
+  }
+
+  /* मोबाइल के लिए Flipkart जैसा बॉटम बार */
+  @media (max-width: 768px) {
+    .main-header {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      top: auto;
+      height: 65px;
+      padding: 5px 0;
+      justify-content: space-around;
+      z-index: 9999;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+      background: white; /* मोबाइल पर वाइट बैकग्राउंड ज्यादा अच्छा लगता है */
+    }
+    
+    .main-header h2 {
+      display: none; /* मोबाइल पर नाम छुपा दें ताकि सिर्फ नेविगेशन दिखे */
+    }
+
+    .main-header nav {
+      width: 100%;
+      justify-content: space-around;
+      gap: 0;
+    }
+
+    .nav-item {
+      color: #555 !important; /* मोबाइल पर डार्क टेक्स्ट */
+      font-size: 12px;
+    }
+    
+    /* कार्ट आइटम को अलग रंग देने के लिए */
+    .nav-item.cart-link {
+      color: #3205f7 !important;
+    }
+  }
+</style>
+
+<div class="main-header">
   <h2 style="margin:0;">Deshaj Store</h2>
   <nav>
-
-    <a href="index.html" style="color:white; margin-right:10px; text-decoration:none;">Home</a>
-    <a href="cart.html" style="color:white; margin-right:10px; text-decoration:none;">🛒</a>
-    <a href="track-myorder-details.html" style="color:white; margin-right:10px; text-decoration:none;">My Orders</a>
-    <a href="mobile-input.html" style="color:white; text-decoration:none;">Edit/Register Profile</a>
+    <a href="index.html" class="nav-item">🏠<br>Home</a>
+    <a href="track-myorder-details.html" class="nav-item">🛍️<br>My Orders</a>
+    <a href="cart.html" class="nav-item cart-link">🛒<br>Cart</a>
+    <a href="mobile-input.html" class="nav-item">👤<br>Account</a>
   </nav>
 </div>
